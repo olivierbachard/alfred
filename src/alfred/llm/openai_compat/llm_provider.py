@@ -1,18 +1,19 @@
 import dataclasses
 
 import httpx
+
 from alfred.llm.base import ChatResponse, LLMError, Message
 
 
-class OpenAIProvider:
+class OpenAICompatProvider:
     def __init__(
         self,
         base_url: str,
         model: str,
-        api_key: str,
+        api_key: str | None,
         http_client: httpx.Client | None = None,
     ):
-        self.base_url = base_url
+        self.base_url = base_url.rstrip("/")
         self.model = model
         self.api_key = api_key
         self.http_client = http_client or httpx.Client()

@@ -44,7 +44,7 @@ You need these tools installed:
 Ask Alfred a question:
 
 ```sh
-uv run alfred "What is the capital of France?"
+uv run alfred ask "What is the capital of France?"
 ```
 
 ## Test
