@@ -1,7 +1,7 @@
 [project]
 name = "alfred"
 version = "0.1.0"
-description = "Add your description here"
+description = "A personal AI assistant for email, portfolio tracking, spaced-repetition reviews, and projects."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
