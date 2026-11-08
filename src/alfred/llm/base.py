@@ -1,10 +1,16 @@
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Protocol
 
 
+class MessageRole(StrEnum):
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
+
 @dataclass
 class Message:
-    role: str
+    role: MessageRole
     content: str
 
 
