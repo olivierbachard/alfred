@@ -4,6 +4,7 @@ from pathlib import Path
 import httpx
 import pytest
 
+from alfred.agent.conversation import Conversation
 from alfred.llm.base import LLMError, Message
 from alfred.llm.openai_compat.llm_provider import OpenAICompatProvider
 
@@ -96,3 +97,40 @@ def test_chat_raising_when_invalid_json_response():
 
     with pytest.raises(LLMError, match="Unexpected response"):
         sut.chat(messages=[Message(role="user", content="Hello!")])
+
+
+def test_chat_resends_full_history_on_second_turn():
+    answers = ["Paris", "About 2.1 million people."]
+    captured_requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        answer = answers[len(captured_requests)]
+        captured_requests.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {"message": {"content": answer}, "finish_reason": "stop"}
+                ],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5},
+            },
+        )
+
+    mock_client = httpx.Client(transport=httpx.MockTransport(handler))
+    sut = build_sut(http_client=mock_client, api_key=None)
+    conversation = Conversation("You are Alfred.")
+
+    conversation.add_user_message("What is the capital of France?")
+    first_response = sut.chat(messages=conversation.get_messages())
+    conversation.add_assistant_message(first_response.content)
+
+    conversation.add_user_message("What's its population?")
+    sut.chat(messages=conversation.get_messages())
+
+    assert len(captured_requests) == 2
+    assert json.loads(captured_requests[1].content)["messages"] == [
+        {"role": "system", "content": "You are Alfred."},
+        {"role": "user", "content": "What is the capital of France?"},
+        {"role": "assistant", "content": "Paris"},
+        {"role": "user", "content": "What's its population?"},
+    ]
