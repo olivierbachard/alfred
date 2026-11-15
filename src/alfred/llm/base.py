@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
@@ -17,9 +18,17 @@ class Message:
 @dataclass
 class ChatResponse:
     content: str
-    finish_reason: str
-    input_tokens: int
-    output_tokens: int
+    finish_reason: str | None
+    input_tokens: int | None
+    output_tokens: int | None
+
+@dataclass
+class StreamChunk:
+    content: str
+    done: bool
+    finish_reason: str | None
+    input_tokens: int | None
+    output_tokens: int | None
 
 
 class LLMError(Exception):
@@ -28,3 +37,5 @@ class LLMError(Exception):
 
 class LLMProvider(Protocol):
     def chat(self, messages: list[Message]) -> ChatResponse: ...
+
+    def chat_stream(self, messages: list[Message]) -> Iterator[StreamChunk]: ...

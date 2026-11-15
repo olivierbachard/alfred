@@ -1,7 +1,9 @@
+from collections.abc import Iterable
+
 from typer.testing import CliRunner
 
 from alfred.channels import cli
-from alfred.llm.base import ChatResponse, LLMError, Message, MessageRole
+from alfred.llm.base import LLMError, Message, MessageRole, StreamChunk
 
 runner = CliRunner()
 
@@ -12,15 +14,30 @@ class FakeProvider:
     def __init__(self) -> None:
         self.received: list[list[Message]] = []
 
-    def chat(self, messages: list[Message]) -> ChatResponse:
+    def chat_stream(self, messages: list[Message]) -> Iterable[StreamChunk]:
         self.received.append(messages)
         if len(self.received) == 1:
             raise LLMError("server unreachable")
-        return ChatResponse(
-            content="Paris",
+        yield StreamChunk(
+            content="Par",
+            done=False,
+            finish_reason=None,
+            input_tokens=None,
+            output_tokens=None,
+        )
+        yield StreamChunk(
+            content="is",
+            done=False,
             finish_reason="stop",
             input_tokens=10,
             output_tokens=5,
+        )
+        yield StreamChunk(
+            content="",
+            done=True,
+            finish_reason=None,
+            input_tokens=None,
+            output_tokens=None,
         )
 
 

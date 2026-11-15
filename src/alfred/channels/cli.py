@@ -2,7 +2,7 @@ import typer
 
 from alfred.agent.conversation import Conversation
 from alfred.config import get_config
-from alfred.llm.base import LLMError, LLMProvider, Message
+from alfred.llm.base import ChatResponse, LLMError, LLMProvider, Message
 from alfred.llm.openai_compat.llm_provider import OpenAICompatProvider
 
 app = typer.Typer()
@@ -53,6 +53,36 @@ def _chat_with_provider(provider: LLMProvider, messages: list[Message]):
         typer.echo(f"Error: {e}", err=True)
         raise
 
+def _chat_stream_with_provider(provider: LLMProvider, messages: list[Message]) -> ChatResponse:
+
+    try:
+        response: str = ""
+        finish_reason : str | None = None
+        input_tokens: int | None = None
+        output_tokens: int | None = None
+        for chunk in provider.chat_stream(messages=messages):
+
+            if chunk.done:
+                break
+
+            finish_reason = chunk.finish_reason if not finish_reason else finish_reason
+            input_tokens = chunk.input_tokens if input_tokens is None else input_tokens
+            output_tokens = chunk.output_tokens if output_tokens is None else output_tokens
+            response += chunk.content
+            typer.echo(chunk.content, nl=False)
+        typer.echo()
+        return ChatResponse(
+            content=response,
+            finish_reason=finish_reason,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens
+        )
+    except LLMError as e:
+        if response:
+            typer.echo()
+        typer.echo(f"Error: {e}", err=True)
+        raise
+
 
 @app.command()
 def chat():
@@ -72,7 +102,7 @@ def chat():
 
             conversation.add_user_message(message)
             try:
-                response = _chat_with_provider(
+                response = _chat_stream_with_provider(
                     provider=provider, messages=conversation.get_messages()
                 )
             except LLMError:
@@ -84,7 +114,6 @@ def chat():
 
             conversation.add_assistant_message(content=response.content)
 
-            typer.echo(f"Response: {response.content}")
             typer.echo(f"Finish reason: {response.finish_reason}")
             typer.echo(f"Input tokens: {response.input_tokens}")
             typer.echo(f"Output tokens: {response.output_tokens}")
