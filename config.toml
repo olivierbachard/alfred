@@ -1,8 +1,14 @@
 [llm]
+provider = "anthropic"
+model = "claude-haiku-5-5"
+
 # Local (Ollama)
 base_url = "http://localhost:11434/v1"
-model = "llama3.2:latest"
+# provider = "openai_compat"
+#model = "llama3.2:latest"
 
 # Cloud (OpenRouter)
+# provider = "openai_compat"
 # base_url = "https://openrouter.ai/api/v1"
 # model = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+
