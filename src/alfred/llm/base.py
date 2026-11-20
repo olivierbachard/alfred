@@ -9,6 +9,7 @@ class MessageRole(StrEnum):
     USER = "user"
     ASSISTANT = "assistant"
 
+
 @dataclass
 class Message:
     role: MessageRole
@@ -21,6 +22,7 @@ class ChatResponse:
     finish_reason: str | None
     input_tokens: int | None
     output_tokens: int | None
+
 
 @dataclass
 class StreamChunk:

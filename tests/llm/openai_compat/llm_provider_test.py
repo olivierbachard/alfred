@@ -78,6 +78,7 @@ def test_chat_raising_connection_error():
 
 def test_chat_raising_when_http_status_error():
     error_body = {"error": "Internal Server Error"}
+
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, json=error_body)
 
@@ -129,7 +130,16 @@ def test_chat_stream_yields_deltas_then_usage_then_done():
     assert request_body["stream_options"] == {"include_usage": True}
 
     assert [c.content for c in chunks] == [
-        "How", " can", " I", " assist", " you", " today", "?", "", "", ""
+        "How",
+        " can",
+        " I",
+        " assist",
+        " you",
+        " today",
+        "?",
+        "",
+        "",
+        "",
     ]
     assert [c.done for c in chunks] == [False] * 9 + [True]
     assert [c.finish_reason for c in chunks if c.finish_reason] == ["stop"]
@@ -197,10 +207,12 @@ def test_chat_resends_full_history_on_second_turn():
         return httpx.Response(
             200,
             json={
-                "choices": [
-                    {"message": {"content": answer}, "finish_reason": "stop"}
-                ],
-                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+                "choices": [{"message": {"content": answer}, "finish_reason": "stop"}],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 5,
+                    "total_tokens": 15,
+                },
             },
         )
 
